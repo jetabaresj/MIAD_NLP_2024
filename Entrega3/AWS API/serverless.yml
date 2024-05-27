@@ -1,0 +1,32 @@
+service: modulo3-delete
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  stage: ${opt:stage, 'dev'}
+  runtime: python3.9
+
+  # ECR IMAGES FOR ML ENDPOINTS
+  ecr:
+    images:
+      appimage:
+        path: ./app
+        buildArgs:
+          STAGE: ${self:provider.stage}
+
+custom:
+  serviceName: ${self:service}
+
+functions:
+  movie-genre: 
+    name: ${self:custom.serviceName}-movie-genre-${self:provider.stage}
+    timeout: 900
+    memorySize: 2048
+    image:
+      name: appimage
+      command:
+        - src.movie_genre.predict
+    events:
+      - httpApi:
+          path: /predict
+          method: POST
